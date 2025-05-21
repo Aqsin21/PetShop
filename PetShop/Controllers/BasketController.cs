@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json;
 using PetShop.DataContext;
+using PetShop.Models;
 
 namespace PetShop.Controllers
 {
@@ -24,7 +25,19 @@ namespace PetShop.Controllers
 
             var basket= GetBasketItems();
 
-            basket.Add(id);
+            var existBasketItem = basket.Find(x => x.ProductId == id);
+            if(existBasketItem == null)
+            {
+                basket.Add(new BasketItem
+                {
+                    ProductId = id,
+                    Quantity = 1
+                });
+            }
+            else
+            {
+                existBasketItem.Quantity++;
+            }
             var basketJson = JsonConvert.SerializeObject(basket);
             Response.Cookies.Append(BasketCookieKey ,basketJson, new CookieOptions
             {
@@ -35,20 +48,20 @@ namespace PetShop.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        private List<int> GetBasketItems()
+        private List<BasketItem> GetBasketItems()
         {
             var basket = Request.Cookies[BasketCookieKey];
             if (string.IsNullOrEmpty(basket))
             {
-                return new List<int>();
+                return new List<BasketItem>();
             }
-            var basketItems =JsonConvert.DeserializeObject<List<int>>(basket);
+            var basketItems =JsonConvert.DeserializeObject<List<BasketItem>>(basket);
             if (basketItems == null)
             {
-                return new List<int>();
+                return new List<BasketItem>();
             }
 
-            return basketItems;
+            return basketItems ;
         }
     }
 
